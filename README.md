@@ -1,0 +1,2 @@
+# swiftCalc
+pet-project
