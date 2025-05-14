@@ -1,2 +1,2 @@
 # swiftCalc
-pet-project
+Базовый pet-проект 
