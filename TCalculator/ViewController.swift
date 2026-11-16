@@ -9,7 +9,7 @@ import UIKit
 
 enum Operation: String {
     case add = "+"
-    case substract = "-"
+    case subtract = "-"
     case multiply = "*"
     case divide = ":"
     
@@ -18,7 +18,7 @@ enum Operation: String {
         case .add:
             return number1 + number2
             
-        case .substract:
+        case .subtract:
             return number1 - number2
             
         case .multiply:
@@ -38,8 +38,18 @@ enum CalculationHistoryItem {
     case operation(Operation)
 }
 
-enum CalculationError: Error {
+enum CalculationError: LocalizedError {
     case dividedByZero
+    case invalidExpression
+
+    var errorDescription: String? {
+        switch self {
+        case .dividedByZero:
+            return "Деление на ноль"
+        case .invalidExpression:
+            return "Некорректное выражение"
+        }
+    }
 }
 
 class ViewController: UIViewController {
@@ -98,9 +108,8 @@ class ViewController: UIViewController {
         do {
             let result = try calculate()
             label.text = numberFormatter.string(from: NSNumber(value: result))
-        } catch {
-            
-            label.text = "Ошибка"
+        } catch let error as CalculationError {
+            label.text = error.localizedDescription
         }
         
         calculationHistory.removeAll()
@@ -152,7 +161,12 @@ class ViewController: UIViewController {
     
     
     func calculate() throws -> Double {
-        guard case .number(let firstNumber) = calculationHistory[0] else { return 0 }
+        guard
+            !calculationHistory.isEmpty,
+            case .number(let firstNumber) = calculationHistory[0]
+        else {
+            throw CalculationError.invalidExpression
+        }
         
         var currentResult = firstNumber
         
@@ -160,7 +174,9 @@ class ViewController: UIViewController {
             guard
                 case .operation(let operation) = calculationHistory[index],
                 case .number(let number) = calculationHistory[index + 1]
-                else { break }
+                else {
+                    throw CalculationError.invalidExpression
+                }
             
             currentResult = try operation.calculate(currentResult, number)
         }
